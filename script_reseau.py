@@ -1,4 +1,7 @@
 import pyshark
+import matplotlib.pyplot as plt
+import math
+import numpy as np
 
 # Chemin d'accès au fichier pcap
 pcap_file = '4gpcap.pcap'
@@ -10,6 +13,7 @@ capture = pyshark.FileCapture(pcap_file)
 total_packets = 0
 total_bytes = 0
 packet_lengths = {}
+packet_lengths_list=[]
 packet_sources = {}
 packet_destinations = {}
 protocols = {}
@@ -92,6 +96,7 @@ for packet in capture:
 
     # Ajouter la longueur du paquet à un dictionnaire pour les longueurs de paquets
     packet_length = int(packet.length)
+    packet_lengths_list.append(packet_length)
     if packet_length in packet_lengths:
         packet_lengths[packet_length] += 1
     else:
@@ -159,3 +164,24 @@ print("Noms de requête DNS : ", dns_request_names)
 print("Types de requête DNS : ", dns_request_types)
 print("Codes de réponse DNS : ", dns_response_codes)
 print("Longueurs de réponse DNS : ", dns_response_lengths)
+#histogram plotting on packet sizes
+plt.style.use('ggplot')
+print(packet_lengths_list)
+n=len(packet_lengths_list)
+rng=max(packet_lengths_list)-min(packet_lengths_list)
+nb_interval=math.sqrt(n)
+wdh_interval=rng/nb_interval
+print(rng, nb_interval, wdh_interval)
+binss=[]
+som=0
+for i in range(39):
+    binss.append(som)
+    som+=36
+#print(binss)
+#plt.hist(packet_lengths_list, bins=binss)
+#plt.xlabel("packets sizes")
+#plt.ylabel("occurences")
+#plt.show()
+#some values about sizes
+print("packet size mean " + str(np.mean(packet_lengths_list)) + "\n"
+      "packet size standard devation " + str(np.std(packet_lengths_list)) + "\n")
