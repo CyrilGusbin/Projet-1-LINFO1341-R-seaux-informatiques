@@ -1,7 +1,7 @@
 import pyshark
 
 # Chemin d'accès au fichier pcap
-pcap_file = 'wifipcap.pcap'
+pcap_file = '4gpcap.pcap'
 
 # Ouvrir le fichier pcap
 capture = pyshark.FileCapture(pcap_file)
@@ -9,7 +9,6 @@ capture = pyshark.FileCapture(pcap_file)
 # Initialiser les variables de statistiques
 total_packets = 0
 total_bytes = 0
-total_time = 0
 packet_lengths = {}
 packet_sources = {}
 packet_destinations = {}
@@ -29,83 +28,7 @@ dns_response_lengths = {}
 
 # Parcourir chaque paquet dans le fichier pcap
 for packet in capture:
-        # Analyser les ports source et destination pour les paquets TCP
-    if 'TCP' in packet:
-        source_port = packet.tcp.srcport
-        if source_port in tcp_source_ports:
-            tcp_source_ports[source_port] += 1
-        else:
-            tcp_source_ports[source_port] = 1
-
-        destination_port = packet.tcp.dstport
-        if destination_port in tcp_destination_ports:
-            tcp_destination_ports[destination_port] += 1
-        else:
-            tcp_destination_ports[destination_port] = 1
-    # Analyser les protocoles utilisés
-    for layer in packet.layers:
-        if layer.layer_name in protocols:
-            protocols[layer.layer_name] += 1
-        else:
-            protocols[layer.layer_name] = 1
-    # Incrémenter le nombre total de paquets
-    total_packets += 1
-
-    # Ajouter la longueur du paquet au total des octets
-    total_bytes += int(packet.length)
-
-    # Ajouter la durée du paquet au temps total
-    try:
-        total_time += float(packet.time_delta)
-    except:
-        continue
-
-    # Ajouter la longueur du paquet à un dictionnaire pour les longueurs de paquets
-    packet_length = int(packet.length)
-    if packet_length in packet_lengths:
-        packet_lengths[packet_length] += 1
-    else:
-        packet_lengths[packet_length] = 1
-
-    # Ajouter les adresses sources et destinations à des dictionnaires distincts
-    try:
-        source_address = packet.ip.src
-        if source_address in packet_sources:
-            packet_sources[source_address] += 1
-        else:
-            packet_sources[source_address] = 1
-
-        destination_address = packet.ip.dst
-        if destination_address in packet_destinations:
-            packet_destinations[destination_address] += 1
-        else:
-            packet_destinations[destination_address] = 1
-    except:
-        continue
-        # Compter les paquets TCP et UDP
-    if 'TCP' in packet:
-        tcp_packets += 1
-    elif 'UDP' in packet:
-        udp_packets += 1
-
-    # Compter les requêtes HTTP et les réponses HTTP
-    try:
-        if 'HTTP' in packet:
-            if packet.http.request_method:
-                http_requests += 1
-            elif packet.http.response_for:
-                http_responses += 1
-    except:
-        continue
-
-    # Compter les poignées de main SSL/TLS
-    try:
-        if 'TLS' in packet or 'SSL' in packet:
-            if packet.ssl.handshake:
-                ssl_handshakes += 1
-    except:
-        continue
-    # Vérifier si le paquet est une requête DNS
+        # Vérifier si le paquet est une requête DNS
     if 'DNS' in packet and packet.dns.qry_name:
 
         # Incrémenter le nombre total de requêtes DNS
@@ -132,14 +55,87 @@ for packet in capture:
             else:
                 dns_response_codes[dns_response_code] = 1
         except:
-            continue
-
+            pass
+        try:
         # Ajouter la longueur de la réponse DNS à un dictionnaire pour les longueurs de réponse DNS
-        dns_response_length = packet.dns.resp_len
-        if dns_response_length in dns_response_lengths:
-            dns_response_lengths[dns_response_length] += 1
+            dns_response_length = packet.dns.resp_len
+            if dns_response_length in dns_response_lengths:
+                dns_response_lengths[dns_response_length] += 1
+            else:
+                dns_response_lengths[dns_response_length] = 1
+        except:
+            pass
+        # Analyser les ports source et destination pour les paquets TCP
+    if 'tcp' in packet:
+        source_port = packet.tcp.srcport
+        if source_port in tcp_source_ports:
+            tcp_source_ports[source_port] += 1
         else:
-            dns_response_lengths[dns_response_length] = 1
+            tcp_source_ports[source_port] = 1
+
+        destination_port = packet.tcp.dstport
+        if destination_port in tcp_destination_ports:
+            tcp_destination_ports[destination_port] += 1
+        else:
+            tcp_destination_ports[destination_port] = 1
+    # Analyser les protocoles utilisés
+    for layer in packet.layers:
+        if layer.layer_name in protocols:
+            protocols[layer.layer_name] += 1
+        else:
+            protocols[layer.layer_name] = 1
+    # Incrémenter le nombre total de paquets
+    total_packets += 1
+
+    # Ajouter la longueur du paquet au total des octets
+    total_bytes += int(packet.length)
+
+    # Ajouter la longueur du paquet à un dictionnaire pour les longueurs de paquets
+    packet_length = int(packet.length)
+    if packet_length in packet_lengths:
+        packet_lengths[packet_length] += 1
+    else:
+        packet_lengths[packet_length] = 1
+
+    # Ajouter les adresses sources et destinations à des dictionnaires distincts
+    try:
+        source_address = packet.ip.src
+        if source_address in packet_sources:
+            packet_sources[source_address] += 1
+        else:
+            packet_sources[source_address] = 1
+
+        destination_address = packet.ip.dst
+        if destination_address in packet_destinations:
+            packet_destinations[destination_address] += 1
+        else:
+            packet_destinations[destination_address] = 1
+    except:
+        pass
+        # Compter les paquets TCP et UDP
+    if 'tcp' in packet:
+        tcp_packets += 1
+    elif 'udp' in packet:
+        udp_packets += 1
+
+    # Compter les requêtes HTTP et les réponses HTTP
+    try:
+        if 'http' in packet:
+            if packet.http.request_method:
+                http_requests += 1
+            elif packet.http.response_for:
+                http_responses += 1
+    except:
+        pass
+
+    # Compter les poignées de main SSL/TLS
+    try:
+        if 'tls' in packet or 'SSL' in packet:
+            if packet.ssl.handshake:
+                ssl_handshakes += 1
+    except:
+        pass
+
 
 # Fermer la capture
 capture.close()
@@ -147,7 +143,6 @@ capture.close()
 # Imprimer les statistiques
 print("Nombre total de paquets : ", total_packets)
 print("Nombre total d'octets : ", total_bytes)
-print("Durée totale de la capture : ", total_time)
 print("Longueurs de paquets : ", packet_lengths)
 print("Sources de paquets : ", packet_sources)
 print("Destinations de paquets : ", packet_destinations)
